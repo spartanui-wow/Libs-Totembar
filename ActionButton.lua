@@ -55,6 +55,10 @@ function ActionButton.New(index, parent)
 		spellKnown = false
 	}
 
+	-- Explicitly assign ActionButton methods to preserve frame methods
+	button.UpdateSpell = ActionButton.UpdateSpell
+	button.UpdateAppearance = ActionButton.UpdateAppearance
+
 	button:SetWidth(BUTTON_SIZE)
 	button:SetHeight(BUTTON_SIZE)
 	ActionButton.SetupVisuals(button)
@@ -159,7 +163,7 @@ end
 ---@param spellData LibsTotembar.SpellData
 function ActionButton:UpdateSpell(spellData)
 	Log('UpdateSpell called for button ' .. (self.slotIndex or 'unknown') .. ' with spell: ' .. (spellData.name or spellData.id), 'debug')
-	
+
 	self.spellId = spellData.id
 	self.spellData = spellData
 

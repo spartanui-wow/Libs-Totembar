@@ -79,11 +79,13 @@ function BarManager:CreateBarFrame()
 		end
 	end
 
-	-- Add some test spells for immediate visibility
-	self:EnableTestMode()
+	-- Only enable test mode for supported classes in development
+	if LibsTotembar.playerClass == 'SHAMAN' or LibsTotembar.playerClass == 'HUNTER' then
+		self:EnableTestMode()
+	end
 	
-	-- Show the frame initially (after content is added)
-	barFrame:Show()
+	-- Let UpdateBarVisibility determine if bar should show
+	self:UpdateBarVisibility()
 
 	return barFrame
 end
@@ -294,9 +296,9 @@ function BarManager:EnableTestMode()
 		testSpells = {1499, 13795} -- Freezing and Immolation trap
 		Log('Using HUNTER test spells', 'debug')
 	else
-		-- Generic test spells
-		testSpells = {133, 168} -- Fireball, Frost Armor for visibility
-		Log('Using generic test spells for class: ' .. (LibsTotembar.playerClass or 'unknown'), 'debug')
+		-- No test spells for unsupported classes
+		testSpells = {}
+		Log('No test spells for unsupported class: ' .. (LibsTotembar.playerClass or 'unknown'), 'debug')
 	end
 
 	Log('Testing ' .. #testSpells .. ' spells', 'debug')

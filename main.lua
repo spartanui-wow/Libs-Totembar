@@ -93,7 +93,7 @@ local defaults = {
 	profile = {
 		enabled = true,
 		maxButtons = 8,
-		hideWhenEmpty = false,
+		hideWhenEmpty = true,
 		-- Position settings
 		position = {
 			anchor = 'CENTER',
