@@ -1,4 +1,4 @@
-## Interface: 110205
+## Interface: 120001, 120000
 ## Title: Lib's - Totembar
 ## Notes: Advanced totem/trap/ability tracking bar with timer support for multiple classes (Shaman totems, Hunter traps, etc.)
 ## IconTexture: Interface/Addons/Libs-Totembar/Logo-Icon
