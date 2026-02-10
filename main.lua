@@ -4,19 +4,35 @@ local AceDB = LibStub:GetLibrary('AceDB-3.0', true)
 ---@class LibsTotembar : AceAddon, AceEvent-3.0, AceTimer-3.0
 local LibsTotembar = AceAddon:NewAddon(addonName, 'AceEvent-3.0', 'AceTimer-3.0')
 
--- Enhanced logging integration with SpartanUI
-local function Log(message, level)
-	level = level or 'info'
-	if C_AddOns.IsAddOnLoaded('SpartanUI') and SUI and SUI.Log then
-		SUI.Log(message, 'LibsTotembar', level)
-	else
-		-- Fallback to standard print with level indication
-		if level ~= 'debug' then -- Skip debug messages when SUI not available
-			print('[LibsTotembar:' .. level .. '] ' .. message)
-		end
+-- Enhanced logging integration with LibAT using new registration system
+local logger = nil
+
+-- Initialize LibAT Logger integration
+local function InitializeLibATLogger()
+	if LibAT and LibAT.Logger then
+		logger = LibAT.Logger.RegisterAddon('LibsTotembar')
+		return true
 	end
+	return false
 end
 
+-- Logging function
+local function Log(message, level)
+	if not logger then
+		InitializeLibATLogger()
+	end
+
+	if not logger then
+		return
+	end
+
+	-- Use the new logger object API
+	if level then
+		logger.log(message, level)
+	else
+		logger.info(message)
+	end
+end
 
 ---@class LibsTotembar.Timer
 ---@field spellId number
@@ -49,42 +65,31 @@ LibsTotembar.activeTimers = {}
 -- Enhanced spell definitions - organized but easily extensible
 local BASE_SPELLS = {
 	SHAMAN = {
-		-- Earth Totems
-		[2484] = {id = 2484, name = 'Earthbind Totem', duration = 20, category = 'Earth', slot = 1},
-		[8071] = {id = 8071, name = 'Stoneskin Totem', duration = 120, category = 'Earth', slot = 1},
-		[5730] = {id = 5730, name = 'Stoneclaw Totem', duration = 15, category = 'Earth', slot = 1},
-		[8143] = {id = 8143, name = 'Tremor Totem', duration = 120, category = 'Earth', slot = 1},
-		-- Fire Totems
-		[3599] = {id = 3599, name = 'Searing Totem', duration = 45, category = 'Fire', slot = 2},
-		[8227] = {id = 8227, name = 'Flametongue Totem', duration = 120, category = 'Fire', slot = 2},
-		[8190] = {id = 8190, name = 'Magma Totem', duration = 20, category = 'Fire', slot = 2},
-		[1535] = {id = 1535, name = 'Fire Nova Totem', duration = 5, category = 'Fire', slot = 2},
-		-- Water Totems
-		[5394] = {id = 5394, name = 'Healing Stream Totem', duration = 120, category = 'Water', slot = 3},
-		[16190] = {id = 16190, name = 'Mana Tide Totem', duration = 12, category = 'Water', slot = 3},
-		[5675] = {id = 5675, name = 'Mana Spring Totem', duration = 120, category = 'Water', slot = 3},
-		-- Air Totems
-		[6495] = {id = 6495, name = 'Sentry Totem', duration = 300, category = 'Air', slot = 4},
-		[8177] = {id = 8177, name = 'Grounding Totem', duration = 45, category = 'Air', slot = 4},
-		[8512] = {id = 8512, name = 'Windfury Totem', duration = 120, category = 'Air', slot = 4},
-		[3738] = {id = 3738, name = 'Wrath of Air Totem', duration = 120, category = 'Air', slot = 4}
+		-- Validated retail totems (2024-2025) - many classic totems no longer exist
+		[2484] = { id = 2484, name = 'Earthbind Totem', duration = 20, category = 'Earth' },
+		[8143] = { id = 8143, name = 'Tremor Totem', duration = 10, category = 'Earth' },
+		[5394] = { id = 5394, name = 'Healing Stream Totem', duration = 15, category = 'Water' },
+		[8512] = { id = 8512, name = 'Windfury Totem', duration = 120, category = 'Air' },
+		-- Note: Many classic totems like Stoneskin, Stoneclaw, Searing, Flametongue, Fire Nova,
+		-- Mana Spring, Sentry, Grounding, and Wrath of Air no longer exist in retail
 	},
 	HUNTER = {
-		-- Traps
-		[1499] = {id = 1499, name = 'Freezing Trap', duration = 60, category = 'Trap'},
-		[13795] = {id = 13795, name = 'Immolation Trap', duration = 15, category = 'Trap'},
-		[14311] = {id = 14311, name = 'Freezing Trap (Effect)', duration = 8, category = 'Trap'},
-		[13809] = {id = 13809, name = 'Frost Trap', duration = 30, category = 'Trap'},
-		-- Pet abilities (examples)
-		[19574] = {id = 19574, name = 'Bestial Wrath', duration = 15, category = 'Pet'},
-		[17253] = {id = 17253, name = 'Bite', duration = 0, category = 'Pet'}
+		-- Traps (validated 2024-2025 retail)
+		[187650] = { id = 187650, name = 'Freezing Trap', duration = 60, category = 'Trap' },
+		[187698] = { id = 187698, name = 'Tar Trap', duration = 30, category = 'Trap' },
+		[162488] = { id = 162488, name = 'Steel Trap', duration = 60, category = 'Trap' },
+		[236776] = { id = 236776, name = 'High Explosive Trap', duration = 60, category = 'Trap' },
+		[462031] = { id = 462031, name = 'Implosive Trap', duration = 60, category = 'Trap' },
+		-- Utility
+		[1543] = { id = 1543, name = 'Flare', duration = 20, category = 'Utility' },
+		[109248] = { id = 109248, name = 'Binding Shot', duration = 8, category = 'Utility' },
 	},
 	PRIEST = {
 		-- Utility spells
-		[121536] = {id = 121536, name = 'Angelic Feather', duration = 8, category = 'Mobility'},
-		[17] = {id = 17, name = 'Power Word: Shield', duration = 30, category = 'Protection'},
-		[139] = {id = 139, name = 'Renew', duration = 15, category = 'Healing'}
-	}
+		[121536] = { id = 121536, name = 'Angelic Feather', duration = 8, category = 'Mobility' },
+		[17] = { id = 17, name = 'Power Word: Shield', duration = 30, category = 'Protection' },
+		[139] = { id = 139, name = 'Renew', duration = 15, category = 'Healing' },
+	},
 }
 
 -- Database defaults
@@ -98,38 +103,38 @@ local defaults = {
 		position = {
 			anchor = 'CENTER',
 			x = 0,
-			y = -200
+			y = -200,
 		},
 		-- Layout settings
 		layout = {
 			scale = 1.0,
-			spacing = 2
+			spacing = 2,
 		},
 		-- Appearance settings
 		appearance = {
 			showBackground = true,
-			backgroundColor = {0, 0, 0, 0.8},
-			borderColor = {1, 1, 1, 1},
-			showCooldownText = true
+			backgroundColor = { 0, 0, 0, 0.8 },
+			borderColor = { 1, 1, 1, 1 },
+			showCooldownText = true,
 		},
 		-- Behavior settings
 		behavior = {
 			lockPosition = false,
 			showTooltips = true,
-			clickToDestroy = true
+			clickToDestroy = true,
 		},
 		-- Filter settings
 		filters = {
 			hideInCombat = false,
 			hideOutOfCombat = false,
-			showUnknownSpells = false
+			showUnknownSpells = false,
 		},
 		-- Spell settings
 		spells = {
 			enabled = {},
-			custom = {}
-		}
-	}
+			custom = {},
+		},
+	},
 }
 
 ---Get available spells for current class including custom spells
@@ -149,7 +154,7 @@ function LibsTotembar:GetAvailableSpells()
 				slot = spellData.slot,
 				icon = spellData.icon or (spellInfo and spellInfo.iconID),
 				enabled = self.db.profile.spells.enabled[spellId] ~= false, -- Default true unless explicitly disabled
-				customAdded = false
+				customAdded = false,
 			}
 		end
 	end
@@ -165,7 +170,7 @@ function LibsTotembar:GetAvailableSpells()
 			slot = spellData.slot,
 			icon = spellData.icon or (spellInfo and spellInfo.iconID),
 			enabled = self.db.profile.spells.enabled[spellId] ~= false, -- Default true unless explicitly disabled
-			customAdded = true
+			customAdded = true,
 		}
 	end
 
@@ -189,7 +194,7 @@ function LibsTotembar:AddCustomSpell(spellId, duration, category)
 		id = spellId,
 		name = spellName,
 		duration = duration,
-		category = category or 'Custom'
+		category = category or 'Custom',
 	}
 
 	-- Enable by default
@@ -235,6 +240,13 @@ end
 
 ---Initialize the addon
 function LibsTotembar:OnInitialize()
+	-- Initialize SpartanUI Logger integration first
+	if InitializeLibATLogger() then
+		Log('LibsTotembar initializing with SpartanUI Logger support', 'info')
+	else
+		Log('LibsTotembar initializing without SpartanUI Logger', 'info')
+	end
+
 	-- Set up database using the library directly
 	if AceDB then
 		---@type LibsTotembar.DBDefaults
@@ -268,6 +280,10 @@ function LibsTotembar:OnEnable()
 		self:RegisterEvent('PLAYER_TOTEM_UPDATE')
 		self:RegisterEvent('PLAYER_ENTERING_WORLD', 'UpdateAllTotems')
 		self:RegisterEvent('PLAYER_LOGIN', 'UpdateAllTotems')
+	elseif playerClass == 'HUNTER' then
+		-- Hunters need spell cast tracking for traps and flare
+		self:RegisterEvent('PLAYER_ENTERING_WORLD')
+		self:RegisterEvent('PLAYER_LOGIN')
 	end
 
 	-- Register general events
@@ -326,6 +342,20 @@ function LibsTotembar:PLAYER_REGEN_ENABLED()
 	end
 end
 
+function LibsTotembar:PLAYER_ENTERING_WORLD()
+	if playerClass == 'HUNTER' and self.BarManager then
+		-- Update bar visibility for hunters
+		self.BarManager:UpdateBarVisibility()
+	end
+end
+
+function LibsTotembar:PLAYER_LOGIN()
+	if playerClass == 'HUNTER' and self.BarManager then
+		-- Update bar visibility for hunters
+		self.BarManager:UpdateBarVisibility()
+	end
+end
+
 -- Backward compatibility functions
 function LibsTotembar:UpdateAllTotems()
 	if self.BarManager then
@@ -337,7 +367,7 @@ end
 SLASH_LIBSTOTEMBAR1 = '/totembar'
 SLASH_LIBSTOTEMBAR2 = '/ltb'
 SlashCmdList['LIBSTOTEMBAR'] = function(msg)
-	local args = {strsplit(' ', msg)}
+	local args = { strsplit(' ', msg) }
 	local command = args[1] and string.lower(args[1]) or ''
 
 	if command == 'config' or command == 'options' or command == '' then

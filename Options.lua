@@ -16,7 +16,7 @@ local OptionsManager = {}
 ---Setup comprehensive options panel
 function OptionsManager:SetupOptions()
 	local options = {
-		name = 'LibsTotembar',
+		name = "Lib's - Totembar",
 		handler = LibsTotembar,
 		type = 'group',
 		args = {
@@ -36,7 +36,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.enabled = value
 							LibsTotembar.BarManager:UpdateBarVisibility()
-						end
+						end,
 					},
 					maxButtons = {
 						type = 'range',
@@ -52,7 +52,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.maxButtons = value
 							LibsTotembar.BarManager:UpdateBarLayout()
-						end
+						end,
 					},
 					hideWhenEmpty = {
 						type = 'toggle',
@@ -65,7 +65,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.hideWhenEmpty = value
 							LibsTotembar.BarManager:UpdateBarVisibility()
-						end
+						end,
 					},
 					lockPosition = {
 						type = 'toggle',
@@ -78,9 +78,9 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.behavior.lockPosition = value
 							LibsTotembar.BarManager:UpdateBarLayout()
-						end
-					}
-				}
+						end,
+					},
+				},
 			},
 			layout = {
 				type = 'group',
@@ -101,7 +101,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.layout.scale = value
 							LibsTotembar.BarManager:UpdateBarLayout()
-						end
+						end,
 					},
 					spacing = {
 						type = 'range',
@@ -118,7 +118,7 @@ function OptionsManager:SetupOptions()
 							LibsTotembar.db.profile.layout.spacing = value
 							-- Would need to reposition buttons here
 							Log('Button spacing changed - restart required for full effect', 'info')
-						end
+						end,
 					},
 					showBackground = {
 						type = 'toggle',
@@ -131,7 +131,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.appearance.showBackground = value
 							LibsTotembar.BarManager:UpdateButtonAppearance()
-						end
+						end,
 					},
 					showCooldownText = {
 						type = 'toggle',
@@ -143,9 +143,9 @@ function OptionsManager:SetupOptions()
 						end,
 						set = function(info, value)
 							LibsTotembar.db.profile.appearance.showCooldownText = value
-						end
-					}
-				}
+						end,
+					},
+				},
 			},
 			spells = {
 				type = 'group',
@@ -155,15 +155,15 @@ function OptionsManager:SetupOptions()
 					header = {
 						type = 'header',
 						name = 'Available Spells',
-						order = 1
+						order = 1,
 					},
 					desc = {
 						type = 'description',
 						name = 'Enable or disable individual spells for tracking. Custom spells can be added using the commands.',
-						order = 2
-					}
+						order = 2,
+					},
 					-- Dynamic spell toggles will be added here
-				}
+				},
 			},
 			filters = {
 				type = 'group',
@@ -181,7 +181,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.filters.hideInCombat = value
 							LibsTotembar.BarManager:UpdateBarVisibility()
-						end
+						end,
 					},
 					hideOutOfCombat = {
 						type = 'toggle',
@@ -194,7 +194,7 @@ function OptionsManager:SetupOptions()
 						set = function(info, value)
 							LibsTotembar.db.profile.filters.hideOutOfCombat = value
 							LibsTotembar.BarManager:UpdateBarVisibility()
-						end
+						end,
 					},
 					showUnknownSpells = {
 						type = 'toggle',
@@ -206,9 +206,9 @@ function OptionsManager:SetupOptions()
 						end,
 						set = function(info, value)
 							LibsTotembar.db.profile.filters.showUnknownSpells = value
-						end
-					}
-				}
+						end,
+					},
+				},
 			},
 			custom = {
 				type = 'group',
@@ -218,23 +218,23 @@ function OptionsManager:SetupOptions()
 					header = {
 						type = 'header',
 						name = 'Add Custom Spells',
-						order = 1
+						order = 1,
 					},
 					desc = {
 						type = 'description',
 						name = 'Use the commands below to add any spell to tracking:\n/totembar add <spellID> [duration] [category]\n/totembar remove <spellID>\n\nExamples:\n/totembar add 2825 40 Utility  (Bloodlust)\n/totembar add 121536 8 Mobility  (Angelic Feather)',
-						order = 2
+						order = 2,
 					},
 					customList = {
 						type = 'group',
 						name = 'Current Custom Spells',
 						inline = true,
 						order = 3,
-						args = {}
-					}
-				}
-			}
-		}
+						args = {},
+					},
+				},
+			},
+		},
 	}
 
 	-- Add dynamic spell toggles
@@ -243,7 +243,7 @@ function OptionsManager:SetupOptions()
 	-- Register options (with safety checks)
 	if AceConfig and AceConfigDialog then
 		AceConfig:RegisterOptionsTable('LibsTotembar', options)
-		AceConfigDialog:AddToBlizOptions('LibsTotembar', 'LibsTotembar')
+		AceConfigDialog:AddToBlizOptions('LibsTotembar', "Lib's - Totembar")
 		Log('Configuration panel registered successfully', 'debug')
 	else
 		Log('Cannot register configuration panel - missing AceConfig libraries', 'error')
@@ -267,7 +267,7 @@ function OptionsManager:UpdateSpellOptions(options)
 		if not categories[category] then
 			categories[category] = {}
 		end
-		table.insert(categories[category], {id = spellId, data = spellData})
+		table.insert(categories[category], { id = spellId, data = spellData })
 	end
 
 	-- Create category groups
@@ -278,16 +278,13 @@ function OptionsManager:UpdateSpellOptions(options)
 			name = category .. ' Spells',
 			inline = true,
 			order = order,
-			args = {}
+			args = {},
 		}
 
 		-- Add spells to category
-		table.sort(
-			spells,
-			function(a, b)
-				return a.data.name < b.data.name
-			end
-		)
+		table.sort(spells, function(a, b)
+			return a.data.name < b.data.name
+		end)
 		for i, spellInfo in ipairs(spells) do
 			local spellId = spellInfo.id
 			local spellData = spellInfo.data
@@ -304,7 +301,7 @@ function OptionsManager:UpdateSpellOptions(options)
 				set = function(info, value)
 					LibsTotembar.db.profile.spells.enabled[spellId] = value
 					Log((value and 'Enabled' or 'Disabled') .. ' spell: ' .. spellData.name, 'info')
-				end
+				end,
 			}
 
 			-- Add remove button for custom spells
@@ -319,7 +316,7 @@ function OptionsManager:UpdateSpellOptions(options)
 						-- Refresh options
 						self:UpdateSpellOptions(options)
 						AceConfigDialog:Open('LibsTotembar')
-					end
+					end,
 				}
 			end
 		end

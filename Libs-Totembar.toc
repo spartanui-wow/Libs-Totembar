@@ -1,12 +1,24 @@
-## Interface: 110200
-## Title: Libs-Totembar
+## Interface: 110205
+## Title: Lib's - Totembar
 ## Notes: Advanced totem/trap/ability tracking bar with timer support for multiple classes (Shaman totems, Hunter traps, etc.)
+## IconTexture: Interface/Addons/Libs-Totembar/Logo-Icon
 ## Version: 1.0.0
 ## Author: wutname1
 ## X-Category: Action Bars
 ## X-Curse-Project-ID: TBD
 ## SavedVariables: LibsTotembarDB
-## OptionalDependencies: SpartanUI
+## OptionalDependencies: SpartanUI, Libs-AddonTools
+## Category: Action Bars
+## Category-deDE: Aktionsleisten
+## Category-esES: Barras de acción
+## Category-esMX: Barras de acción
+## Category-frFR: Barres d’action
+## Category-itIT: Barre delle azioni
+## Category-koKR: 행동 단축바
+## Category-ptBR: Barras de ação
+## Category-ruRU: Панели команд
+## Category-zhCN: 动作条
+## Category-zhTW: 快捷列
 
 # Required Ace3 libraries
 libs\Ace3\Ace3.xml

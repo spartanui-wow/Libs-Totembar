@@ -27,7 +27,7 @@ function BarManager:CreateBarFrame()
 	barFrame = CreateFrame('Frame', 'LibsTotembarFrame', UIParent, 'BackdropTemplate')
 	barFrame:SetSize(frameWidth, BUTTON_SIZE)
 	barFrame:SetScale(db.layout.scale)
-	
+
 	-- Add backdrop for visibility
 	barFrame:SetBackdrop({
 		bgFile = 'Interface\\Tooltips\\UI-Tooltip-Background',
@@ -35,7 +35,7 @@ function BarManager:CreateBarFrame()
 		tile = true,
 		tileSize = 16,
 		edgeSize = 16,
-		insets = {left = 4, right = 4, top = 4, bottom = 4}
+		insets = { left = 4, right = 4, top = 4, bottom = 4 },
 	})
 	barFrame:SetBackdropColor(0, 0, 0, 0.8)
 	barFrame:SetBackdropBorderColor(0.8, 0.8, 0.8, 1)
@@ -48,23 +48,17 @@ function BarManager:CreateBarFrame()
 		barFrame:EnableMouse(true)
 		barFrame:SetMovable(true)
 		barFrame:RegisterForDrag('LeftButton')
-		barFrame:SetScript(
-			'OnDragStart',
-			function(self)
-				self:StartMoving()
-			end
-		)
-		barFrame:SetScript(
-			'OnDragStop',
-			function(self)
-				self:StopMovingOrSizing()
-				-- Save position
-				local point, _, _, x, y = self:GetPoint()
-				LibsTotembar.db.profile.position.anchor = point
-				LibsTotembar.db.profile.position.x = x
-				LibsTotembar.db.profile.position.y = y
-			end
-		)
+		barFrame:SetScript('OnDragStart', function(self)
+			self:StartMoving()
+		end)
+		barFrame:SetScript('OnDragStop', function(self)
+			self:StopMovingOrSizing()
+			-- Save position
+			local point, _, _, x, y = self:GetPoint()
+			LibsTotembar.db.profile.position.anchor = point
+			LibsTotembar.db.profile.position.x = x
+			LibsTotembar.db.profile.position.y = y
+		end)
 	end
 
 	-- Create buttons
@@ -83,7 +77,7 @@ function BarManager:CreateBarFrame()
 	if LibsTotembar.playerClass == 'SHAMAN' or LibsTotembar.playerClass == 'HUNTER' then
 		self:EnableTestMode()
 	end
-	
+
 	-- Let UpdateBarVisibility determine if bar should show
 	self:UpdateBarVisibility()
 
@@ -287,13 +281,13 @@ end
 ---Test mode - show some dummy buttons
 function BarManager:EnableTestMode()
 	Log('EnableTestMode starting for class: ' .. (LibsTotembar.playerClass or 'unknown'), 'debug')
-	
+
 	local testSpells = {}
 	if LibsTotembar.playerClass == 'SHAMAN' then
-		testSpells = {2484, 3599, 5394, 6495} -- One from each totem category
+		testSpells = { 2484, 8143, 5394, 8512 } -- Earthbind, Tremor, Healing Stream, Windfury
 		Log('Using SHAMAN test spells', 'debug')
 	elseif LibsTotembar.playerClass == 'HUNTER' then
-		testSpells = {1499, 13795} -- Freezing and Immolation trap
+		testSpells = { 187650, 187698, 162488, 1543 } -- Freezing Trap, Tar Trap, Steel Trap, Flare
 		Log('Using HUNTER test spells', 'debug')
 	else
 		-- No test spells for unsupported classes
@@ -305,21 +299,21 @@ function BarManager:EnableTestMode()
 
 	for i, spellId in ipairs(testSpells) do
 		Log('Processing spell ' .. i .. ': ' .. spellId, 'debug')
-		
+
 		if totemButtons[i] then
 			Log('Button ' .. i .. ' exists', 'debug')
 			local spellInfo = C_Spell.GetSpellInfo(spellId)
 			local spellName = spellInfo and spellInfo.name
 			local spellIcon = spellInfo and spellInfo.iconID
 			Log('Spell details for ' .. spellId .. ': name=' .. (spellName or 'nil') .. ', icon=' .. (spellIcon or 'nil'), 'debug')
-			
+
 			if spellName then
 				local testData = {
 					id = spellId,
 					name = spellName,
 					duration = 30,
 					category = 'Test',
-					icon = spellIcon
+					icon = spellIcon,
 				}
 				Log('Updating button ' .. i .. ' with spell: ' .. spellName, 'debug')
 				totemButtons[i]:UpdateSpell(testData)

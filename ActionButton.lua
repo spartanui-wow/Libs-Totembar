@@ -52,7 +52,7 @@ function ActionButton.New(index, parent)
 		charges = 0,
 		cooldownRemaining = 0,
 		onGlobalCooldown = false,
-		spellKnown = false
+		spellKnown = false,
 	}
 
 	-- Explicitly assign ActionButton methods to preserve frame methods
@@ -76,7 +76,7 @@ function ActionButton.SetupVisuals(button)
 		edgeFile = 'Interface\\Buttons\\UI-Quickslot-Depress',
 		tile = false,
 		edgeSize = 2,
-		insets = {left = 2, right = 2, top = 2, bottom = 2}
+		insets = { left = 2, right = 2, top = 2, bottom = 2 },
 	})
 	button:SetBackdropColor(1, 1, 1, 1)
 	button:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
@@ -112,40 +112,34 @@ end
 
 ---Setup event handlers
 function ActionButton.SetupEvents(button)
-	button:SetScript(
-		'OnEnter',
-		function(self)
-			if LibsTotembar.db.profile.behavior.showTooltips and self.spellId and self.spellId > 0 then
-				GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
-				GameTooltip:SetSpellByID(self.spellId)
+	button:SetScript('OnEnter', function(self)
+		if LibsTotembar.db.profile.behavior.showTooltips and self.spellId and self.spellId > 0 then
+			GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
+			GameTooltip:SetSpellByID(self.spellId)
 
-				-- Add timer info if available
-				if self.timer then
-					local remaining = LibsTotembar:TimeLeft(self.timerId)
-					if remaining > 0 then
-						GameTooltip:AddLine(string.format('Time remaining: %.1fs', remaining), 1, 1, 1)
-					end
+			-- Add timer info if available
+			if self.timer then
+				local remaining = LibsTotembar:TimeLeft(self.timerId)
+				if remaining > 0 then
+					GameTooltip:AddLine(string.format('Time remaining: %.1fs', remaining), 1, 1, 1)
 				end
-
-				-- Add category info
-				if self.spellData then
-					GameTooltip:AddLine('Category: ' .. (self.spellData.category or 'Unknown'), 0.7, 0.7, 0.7)
-					if self.spellData.customAdded then
-						GameTooltip:AddLine('Custom spell', 0.5, 0.5, 1)
-					end
-				end
-
-				GameTooltip:Show()
 			end
-		end
-	)
 
-	button:SetScript(
-		'OnLeave',
-		function()
-			GameTooltip:Hide()
+			-- Add category info
+			if self.spellData then
+				GameTooltip:AddLine('Category: ' .. (self.spellData.category or 'Unknown'), 0.7, 0.7, 0.7)
+				if self.spellData.customAdded then
+					GameTooltip:AddLine('Custom spell', 0.5, 0.5, 1)
+				end
+			end
+
+			GameTooltip:Show()
 		end
-	)
+	end)
+
+	button:SetScript('OnLeave', function()
+		GameTooltip:Hide()
+	end)
 end
 
 ---Setup secure attributes for clicking
@@ -191,7 +185,7 @@ function ActionButton:UpdateSpell(spellData)
 			category = spellData.category,
 			slotId = spellData.slot,
 			timerId = timerId,
-			metadata = {}
+			metadata = {},
 		}
 
 		LibsTotembar.activeTimers[timerId] = self.timer
