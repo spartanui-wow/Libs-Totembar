@@ -143,16 +143,50 @@ function Tracker:ReadSlot(slot)
 
 	-- Secret slot: pair it with a cast we just saw, or keep what we already knew. A totem that
 	-- died stays paired, but its duration object is empty, so nothing is drawn for it.
-	self.lastSecretSlot = { slot = slot, time = Now() }
+	self.lastSecretSlot = { slot = slot, time = Now(), prev = current }
 	local last = self.lastCast
 	if last and Now() - last.time <= PAIR_WINDOW then
-		self.slots[slot] = { key = last.key, slot = slot, secret = true, time = Now(), seq = self:NextSeq() }
+		self:PairSecret(slot, last.key, current)
 		return true
 	end
 	if current then
 		current.secret = true
 	end
 	return true
+end
+
+---Credits a secret slot change to a cast. A slot we knew nothing about can only have gained a
+---totem, so it is a sure match. A slot that held something may just have lost it (an old totem
+---expiring or being replaced), so that match is tentative and gives way to a sure one.
+---@param slot number
+---@param key number
+---@param previous table|nil The slot's record before this change
+function Tracker:PairSecret(slot, key, previous)
+	if previous and previous.key == key then
+		-- Same spell again: keep its place instead of jumping ahead of the new totem.
+		previous.secret = true
+		self.slots[slot] = previous
+		return
+	end
+	local tentative = previous ~= nil
+	if tentative then
+		for other, rec in pairs(self.slots) do
+			if other ~= slot and rec.key == key and not rec.tentative and rec.time and Now() - rec.time <= PAIR_WINDOW then
+				-- The cast already has a sure slot; this change is an old totem going away.
+				previous.secret = true
+				self.slots[slot] = previous
+				return
+			end
+		end
+	end
+	self.slots[slot] = { key = key, slot = slot, secret = true, tentative = tentative, time = Now(), seq = self:NextSeq() }
+	if not tentative then
+		for other, rec in pairs(self.slots) do
+			if other ~= slot and rec.tentative and rec.key == key then
+				rec.key = nil
+			end
+		end
+	end
 end
 
 function Tracker:OnTotemUpdate(_, slot)
@@ -196,7 +230,7 @@ function Tracker:OnSpellCast(spellID)
 		local recent = self.lastSecretSlot
 		if recent and Now() - recent.time <= PAIR_WINDOW then
 			self.lastSecretSlot = nil
-			self.slots[recent.slot] = { key = spell.key, slot = recent.slot, secret = true, time = Now(), seq = self:NextSeq() }
+			self:PairSecret(recent.slot, spell.key, recent.prev)
 			self:Publish()
 			return
 		end

@@ -187,6 +187,9 @@ function Bar:GetChoice(view, index)
 	end
 	choice = Addon:CreateSpellButton(view.flyout, nil, false)
 	choice.isFlyoutChoice = true
+	-- Choices only get mouse-up clicks. Without this, the "cast on key down" setting makes the
+	-- secure template skip the up-click and the pick would swap the button without casting.
+	choice:SetAttribute('useOnKeyDown', false)
 	SecureHandlerWrapScript(choice, 'OnClick', self.header, FLYOUT_PICK_PRE, FLYOUT_PICK_POST)
 	view.choices[index] = choice
 	return choice
@@ -577,6 +580,8 @@ end
 
 function Bar:SetStripTimer(strip, timer)
 	strip.ticker:SetScript('OnUpdate', nil)
+	-- Changing the range is how Blizzard detaches a running timer from a status bar.
+	strip:SetMinMaxValues(0, 0)
 	if not timer then
 		strip:SetMinMaxValues(0, 1)
 		strip:SetValue(0)
