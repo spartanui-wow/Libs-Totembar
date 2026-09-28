@@ -1,13 +1,12 @@
-## Interface: 120100, 120007
-## Title: Lib's - Totembar
-## Notes: Advanced totem/trap/ability tracking bar with timer support for multiple classes (Shaman totems, Hunter traps, etc.)
-## IconTexture: Interface/Addons/Libs-Totembar/Logo-Icon
-## Version: 1.0.0
+## Interface: 120100, 120007, 16001, 50504, 38001, 20506, 11508
+## Title: Libs - Totembar
+## Notes: One-click bar for totems, traps and statues, with live timers for what you have placed.
+## IconTexture: Interface/AddOns/Libs-Totembar/Logo-Icon
+## Version: @project-version@
 ## Author: wutname1
-## X-Category: Action Bars
 ## X-Curse-Project-ID: TBD
 ## SavedVariables: LibsTotembarDB
-## OptionalDependencies: SpartanUI, Libs-AddonTools
+## OptionalDependencies: LibsAddonTools
 ## Category: Action Bars
 ## Category-deDE: Aktionsleisten
 ## Category-esES: Barras de acción
@@ -20,11 +19,14 @@
 ## Category-zhCN: 动作条
 ## Category-zhTW: 快捷列
 
-# Required Ace3 libraries
 libs\Ace3\Ace3.xml
 
-# Core addon files (load order is important)
-main.lua
-ActionButton.lua
-Bar.lua
-Options.lua
+Core\Init.lua
+Core\Compat.lua
+Data\Spells.lua
+Core\Spells.lua
+Core\Tracker.lua
+UI\Theme.lua
+UI\Button.lua
+UI\Bar.lua
+UI\Options.lua

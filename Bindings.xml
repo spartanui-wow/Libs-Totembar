@@ -1,0 +1,14 @@
+<Bindings>
+	<Binding name="CLICK LibsTotembarButton1:LeftButton" header="LIBSTOTEMBAR" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton2:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton3:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton4:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton5:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton6:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton7:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton8:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton9:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton10:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton11:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK LibsTotembarButton12:LeftButton" category="ADDONS"/>
+</Bindings>
