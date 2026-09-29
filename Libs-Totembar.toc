@@ -6,7 +6,7 @@
 ## Author: wutname1
 ## X-Curse-Project-ID: TBD
 ## SavedVariables: LibsTotembarDB
-## OptionalDependencies: LibsAddonTools
+## OptionalDeps: LibsAddonTools
 ## Category: Action Bars
 ## Category-deDE: Aktionsleisten
 ## Category-esES: Barras de acción
@@ -30,3 +30,4 @@ UI\Theme.lua
 UI\Button.lua
 UI\Bar.lua
 UI\Options.lua
+Core\Setup.lua

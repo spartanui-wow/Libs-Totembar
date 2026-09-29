@@ -53,6 +53,9 @@ function Addon:OnInitialize()
 		self.logger = LibAT.Logger.RegisterAddon(addonName)
 	end
 
+	-- Before the database exists, so Setup can spot a new install
+	self:RegisterSetup()
+
 	self.db = LibStub('AceDB-3.0'):New('LibsTotembarDB', defaults, true)
 	self.db.RegisterCallback(self, 'OnProfileChanged', 'OnProfileUpdate')
 	self.db.RegisterCallback(self, 'OnProfileCopied', 'OnProfileUpdate')
