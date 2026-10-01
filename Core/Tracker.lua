@@ -49,8 +49,11 @@ function Tracker:OnEnable()
 		self:OnSpellCast(spellID)
 	end)
 	self:RegisterMessage(Addon.MSG_SPELLS, 'ScanSlots')
-	-- The combat log is closed to addons on Retail; on Classic it tells us when a trap springs.
-	if Addon.IsClassic and self.Spells.classFile == 'HUNTER' then
+	-- The combat log tells us when a trap springs, where the client still lets addons read it.
+	-- Clients on the modern engine (Retail, WoW Forever) forbid registering it at all, so ask the
+	-- client rather than going by game flavor.
+	local combatLogClosed = C_CombatLog and C_CombatLog.IsCombatLogRestricted and C_CombatLog.IsCombatLogRestricted()
+	if Addon.IsClassic and self.Spells.classFile == 'HUNTER' and not combatLogClosed then
 		self:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED', 'OnCombatLog')
 	end
 	self.playerGUID = UnitGUID('player')
