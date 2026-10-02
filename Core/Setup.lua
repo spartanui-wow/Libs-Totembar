@@ -30,30 +30,34 @@ function Addon:RegisterSetup()
 		return
 	end
 
-	reg:AddStep({
-		id = 'direction',
-		kind = 'choice',
-		name = 'Bar shape',
-		title = 'How should the bar be laid out?',
-		text = 'For shamans, hunters, monks and druids. You can move the bar with /totembar unlock.',
-		choices = {
-			{ value = 'HORIZONTAL', title = 'A row', caption = 'Buttons sit side by side.', recommended = true },
-			{ value = 'VERTICAL', title = 'A column', caption = 'Buttons stack on top of each other.' },
-		},
-		get = function()
-			return Addon:Settings().orientation
-		end,
-		set = function(value)
-			SetSetting('orientation', value)
-		end,
-	})
+	-- Only classes with totems, traps or statues are asked; the addon waits for one of those.
+	local function HasSpells()
+		local _, classFile = UnitClass('player')
+		return Addon:GetClassGroups(classFile) ~= nil
+	end
 
 	reg:AddStep({
 		id = 'visibility',
 		kind = 'choice',
-		name = 'When to show',
+		name = 'Your bar',
 		title = 'When should the bar show?',
-		text = 'You can change this later.',
+		text = 'Move the bar with /totembar unlock.',
+		hidden = function()
+			return not HasSpells()
+		end,
+		extra = {
+			title = 'How should the buttons line up?',
+			choices = {
+				{ value = 'HORIZONTAL', title = 'In a row' },
+				{ value = 'VERTICAL', title = 'In a column' },
+			},
+			get = function()
+				return Addon:Settings().orientation
+			end,
+			set = function(value)
+				SetSetting('orientation', value)
+			end,
+		},
 		choices = {
 			{ value = 'always', title = 'All the time', caption = 'The bar is always on screen.', recommended = true },
 			{ value = 'faded', title = 'Faded out of combat', caption = 'The bar is see-through until a fight starts.' },
