@@ -136,8 +136,10 @@ function Bar:GetButton(index)
 	if button then
 		return button
 	end
-	button = Addon:CreateSpellButton(self.header, BUTTON_PREFIX .. index, true)
-	SecureHandlerWrapScript(button, 'OnEnter', self.header, FLYOUT_OPEN)
+	local header = self.header
+	button = Addon:CreateSpellButton(header, BUTTON_PREFIX .. index, true, function(btn)
+		SecureHandlerWrapScript(btn, 'OnEnter', header, FLYOUT_OPEN)
+	end)
 	button:HookScript('OnAttributeChanged', function(btn, name, value)
 		if name == 'ltb-key' and btn.isFlyoutMain and value then
 			self:OnFlyoutPicked(btn, value)
@@ -185,12 +187,14 @@ function Bar:GetChoice(view, index)
 	if choice then
 		return choice
 	end
-	choice = Addon:CreateSpellButton(view.flyout, nil, false)
+	local header = self.header
+	choice = Addon:CreateSpellButton(view.flyout, nil, false, function(btn)
+		SecureHandlerWrapScript(btn, 'OnClick', header, FLYOUT_PICK_PRE, FLYOUT_PICK_POST)
+	end)
 	choice.isFlyoutChoice = true
 	-- Choices only get mouse-up clicks. Without this, the "cast on key down" setting makes the
 	-- secure template skip the up-click and the pick would swap the button without casting.
 	choice:SetAttribute('useOnKeyDown', false)
-	SecureHandlerWrapScript(choice, 'OnClick', self.header, FLYOUT_PICK_PRE, FLYOUT_PICK_POST)
 	view.choices[index] = choice
 	return choice
 end

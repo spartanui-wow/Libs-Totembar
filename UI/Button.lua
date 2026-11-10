@@ -23,8 +23,9 @@ local EMPTY_DURATION = Compat.HasDurationObjects and C_DurationUtil.CreateDurati
 ---@param parent Frame
 ---@param name string|nil Global name (bound keys use it)
 ---@param keyboard boolean Also react on key down (for key bindings)
+---@param secureSetup? fun(button: LibsTotembar.Button) Wraps secure scripts before our hooks go on
 ---@return LibsTotembar.Button
-function Addon:CreateSpellButton(parent, name, keyboard)
+function Addon:CreateSpellButton(parent, name, keyboard, secureSetup)
 	---@type LibsTotembar.Button
 	local button = CreateFrame('Button', name, parent, 'SecureActionButtonTemplate')
 	Mixin(button, ButtonMixin)
@@ -104,6 +105,10 @@ function Addon:CreateSpellButton(parent, name, keyboard)
 	-- Manual countdowns for clients without engine duration text.
 	button.ticker = CreateFrame('Frame', nil, button)
 
+	-- Wrapping a script replaces it, which would drop hooks added before.
+	if secureSetup then
+		secureSetup(button)
+	end
 	button:HookScript('OnEnter', button.OnEnter)
 	button:HookScript('OnLeave', button.OnLeave)
 	button:HookScript('OnSizeChanged', button.OnSizeChanged)
