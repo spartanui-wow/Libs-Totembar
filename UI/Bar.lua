@@ -294,9 +294,8 @@ function Bar:DoLayout()
 	local size, spacing, gap = s.buttonSize, s.spacing, s.groupSpacing
 	local horizontal = s.orientation == 'HORIZONTAL'
 	local accent = s.showAccent and (ACCENT_SIZE + ACCENT_GAP) or 0
-	local direction = self:FlyoutDirection()
-
 	header:SetScale(s.scale)
+	local direction = self:FlyoutDirection()
 	wipe(self.active)
 
 	local used, viewCount, cursor = 0, 0, 0
@@ -364,6 +363,12 @@ function Bar:DoLayout()
 		header:SetSize(length, size + accent)
 	else
 		header:SetSize(size + accent, length)
+	end
+
+	-- A new scale changes how thick one pixel is without resizing anything.
+	T.LayoutBorder(self.mover, self.mover.border)
+	for _, button in ipairs(self.active) do
+		button:OnSizeChanged()
 	end
 
 	self:UpdateVisibility()
