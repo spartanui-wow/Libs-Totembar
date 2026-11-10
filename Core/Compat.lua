@@ -318,6 +318,13 @@ function Compat.ReadTotem(slot)
 	return scratch
 end
 
+---Whether the slot holds a totem. May be a secret boolean: only test it after Compat.IsSecret.
+---@param slot number
+---@return boolean|nil
+function Compat.TotemPresent(slot)
+	return (GetTotemInfo(slot))
+end
+
 ---Engine-side duration for a totem slot (safe while the slot is secret). nil when unsupported.
 ---@param slot number
 ---@return table|nil

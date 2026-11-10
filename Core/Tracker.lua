@@ -4,8 +4,8 @@ local Compat = Addon.Compat
 
 -- Knows which of our spells is currently placed and for how long.
 --
--- Totems, statues and similar objects live in the game's totem slots. On Retail those slots are
--- secret during combat, so a slot cannot always be read to learn which spell filled it. The
+-- Totems, statues and similar objects live in the game's totem slots. On Retail and WoW Forever
+-- those slots can be secret during combat, so a slot cannot always be read to learn which spell filled it. The
 -- player's own casts are never secret, though, so a slot that changes right after we saw one of
 -- our spells cast belongs to that spell. The countdown itself is drawn by the engine from the
 -- slot's duration object, which works whether or not the slot is secret.
@@ -25,6 +25,7 @@ local GetEventInfo = (C_CombatLog and C_CombatLog.GetCurrentEventInfo) or Combat
 ---@field start number|nil Known when not secret
 ---@field duration number|nil Known when not secret
 ---@field secret boolean|nil Slot could not be read; draw through engine-side durations only
+---@field gone boolean|nil A hidden slot changed with no cast to explain it: the totem most likely died
 ---@field seq number Higher is more recent
 
 function Tracker:OnInitialize()
@@ -43,6 +44,7 @@ function Tracker:OnEnable()
 	self:RegisterEvent('PLAYER_TOTEM_UPDATE', 'OnTotemUpdate')
 	self:RegisterEvent('PLAYER_ENTERING_WORLD', 'ScanSlots')
 	self:RegisterEvent('PLAYER_REGEN_ENABLED', 'ScanSlots')
+	pcall(self.RegisterEvent, self, 'ADDON_RESTRICTION_STATE_CHANGED', 'OnRestrictionChanged')
 	-- A unit event bound to the player only: other units' cast events can carry secret unit
 	-- tokens on Retail, which cannot even be compared.
 	self.castFrame = CreateFrame('Frame')
@@ -65,6 +67,14 @@ end
 
 local function Now()
 	return GetTime()
+end
+
+---Whether a spell may live in the slot. Classic elements own one fixed slot each.
+---@param spell LibsTotembar.Spell|nil
+---@param slot number
+---@return boolean
+local function SlotFits(spell, slot)
+	return spell ~= nil and (not spell.group.slot or spell.group.slot == slot)
 end
 
 function Tracker:NextSeq()
@@ -112,15 +122,16 @@ function Tracker:IdentifySlot(slot, info)
 		end
 	end
 	local last = self.lastCast
-	if last and Now() - last.time <= PAIR_WINDOW then
+	if last and Now() - last.time <= PAIR_WINDOW and SlotFits(Spells.byKey[last.key], slot) then
 		return Spells.byKey[last.key]
 	end
 	return nil
 end
 
 ---@param slot number
+---@param fromEvent? boolean The game said this slot changed (scans only re-read every slot)
 ---@return boolean changed
-function Tracker:ReadSlot(slot)
+function Tracker:ReadSlot(slot, fromEvent)
 	local info = Compat.ReadTotem(slot)
 	local current = self.slots[slot]
 
@@ -133,13 +144,19 @@ function Tracker:ReadSlot(slot)
 			return false
 		end
 		local spell = self:IdentifySlot(slot, info)
+		local key = spell and spell.key
+		local seq
+		if current and current.secret and key and current.key == key then
+			-- Read again after combat: same totem, so it keeps its place.
+			seq = current.seq
+		end
 		self.slots[slot] = {
-			key = spell and spell.key,
+			key = key,
 			slot = slot,
 			start = info.start,
 			duration = info.duration,
 			time = Now(),
-			seq = self:NextSeq(),
+			seq = seq or self:NextSeq(),
 		}
 		if spell and self.lastCast and self.lastCast.key == spell.key then
 			self.lastCast = nil
@@ -147,39 +164,52 @@ function Tracker:ReadSlot(slot)
 		return true
 	end
 
-	-- Secret slot: pair it with a cast we just saw, or keep what we already knew. A totem that
-	-- died stays paired, but its duration object is empty, so nothing is drawn for it.
-	self.lastSecretSlot = { slot = slot, time = Now(), prev = current }
-	local last = self.lastCast
-	if last and Now() - last.time <= PAIR_WINDOW then
-		self:PairSecret(slot, last.key, current)
-		return true
-	end
 	if current then
 		current.secret = true
+	end
+	if not fromEvent then
+		-- A scan cannot tell whether a hidden slot changed, so it changes nothing.
+		return true
+	end
+
+	-- Hidden slot that changed: pair it with a cast we just saw. With no cast, the totem in it
+	-- most likely died, but a cast event arriving right after can still claim the change.
+	local wasGone = current and current.gone or false
+	local last = self.lastCast
+	if last and Now() - last.time <= PAIR_WINDOW and SlotFits(self.Spells.byKey[last.key], slot) then
+		self.lastSecretSlot = nil
+		self:PairSecret(slot, last.key, current, wasGone)
+		return true
+	end
+	self.lastSecretSlot = { slot = slot, time = Now(), prev = current, prevGone = wasGone }
+	if current then
+		current.gone = true
 	end
 	return true
 end
 
----Credits a secret slot change to a cast. A slot we knew nothing about can only have gained a
----totem, so it is a sure match. A slot that held something may just have lost it (an old totem
----expiring or being replaced), so that match is tentative and gives way to a sure one.
+---Credits a secret slot change to a cast. A slot we knew nothing about (or believe empty) can only
+---have gained a totem, so it is a sure match. A slot that held something may just have lost it (an
+---old totem expiring or being replaced), so that match is tentative and gives way to a sure one.
 ---@param slot number
 ---@param key number
 ---@param previous table|nil The slot's record before this change
-function Tracker:PairSecret(slot, key, previous)
+---@param previousGone boolean Whether that record was already believed gone before this change
+function Tracker:PairSecret(slot, key, previous, previousGone)
 	if previous and previous.key == key then
 		-- Same spell again: keep its place instead of jumping ahead of the new totem.
 		previous.secret = true
+		previous.gone = nil
 		self.slots[slot] = previous
 		return
 	end
-	local tentative = previous ~= nil
+	local tentative = previous ~= nil and not previousGone
 	if tentative then
 		for other, rec in pairs(self.slots) do
-			if other ~= slot and rec.key == key and not rec.tentative and rec.time and Now() - rec.time <= PAIR_WINDOW then
+			if other ~= slot and rec.key == key and not rec.tentative and not rec.gone and rec.time and Now() - rec.time <= PAIR_WINDOW then
 				-- The cast already has a sure slot; this change is an old totem going away.
 				previous.secret = true
+				previous.gone = true
 				self.slots[slot] = previous
 				return
 			end
@@ -189,15 +219,23 @@ function Tracker:PairSecret(slot, key, previous)
 	if not tentative then
 		for other, rec in pairs(self.slots) do
 			if other ~= slot and rec.tentative and rec.key == key then
+				-- That change was an old totem going away, not this cast.
 				rec.key = nil
+				rec.gone = true
 			end
 		end
 	end
 end
 
 function Tracker:OnTotemUpdate(_, slot)
-	if slot and self:ReadSlot(slot) then
+	if slot and self:ReadSlot(slot, true) then
 		self:Publish()
+	end
+end
+
+function Tracker:OnRestrictionChanged()
+	if not InCombatLockdown() and not UnitAffectingCombat('player') then
+		self:ScanSlots()
 	end
 end
 
@@ -234,14 +272,14 @@ function Tracker:OnSpellCast(spellID)
 		self.lastCast = { key = spell.key, time = Now() }
 		-- The slot may have changed just before the cast event arrived.
 		local recent = self.lastSecretSlot
-		if recent and Now() - recent.time <= PAIR_WINDOW then
+		if recent and Now() - recent.time <= PAIR_WINDOW and SlotFits(spell, recent.slot) then
 			self.lastSecretSlot = nil
-			self:PairSecret(recent.slot, spell.key, recent.prev)
+			self:PairSecret(recent.slot, spell.key, recent.prev, recent.prevGone)
 			self:Publish()
 			return
 		end
-		for _, rec in pairs(self.slots) do
-			if not rec.key and rec.time and Now() - rec.time <= PAIR_WINDOW then
+		for slot, rec in pairs(self.slots) do
+			if not rec.key and not rec.gone and rec.time and Now() - rec.time <= PAIR_WINDOW and SlotFits(spell, slot) then
 				rec.key = spell.key
 				self:Publish()
 				return
@@ -284,7 +322,7 @@ function Tracker:Publish()
 	local Spells = self.Spells
 
 	local function Consider(timer)
-		local spell = timer.key and Spells.byKey[timer.key]
+		local spell = timer.key and not timer.gone and Spells.byKey[timer.key]
 		if not spell then
 			return
 		end

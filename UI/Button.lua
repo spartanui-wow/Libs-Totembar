@@ -253,8 +253,23 @@ function ButtonMixin:SetTimer(timer, tracker, badgeSpell)
 	local wasActive = self.timerActive
 	self.ticker:SetScript('OnUpdate', nil)
 
-	if badgeSpell then
+	-- A hidden slot cannot be tested, so the engine fades the border and badge once it empties.
+	local have = true
+	if timer and timer.secret and timer.slot then
+		have = Compat.TotemPresent(timer.slot)
+	end
+	local haveSecret = not Compat.CanAccess(have)
+	if not haveSecret and not have then
+		timer = nil
+	end
+
+	if badgeSpell and timer then
 		self.badge.icon:SetTexture(badgeSpell.icon)
+		if haveSecret and self.badge.SetAlphaFromBoolean then
+			self.badge:SetAlphaFromBoolean(have, 1, 0)
+		else
+			self.badge:SetAlpha(1)
+		end
 		self.badge:Show()
 	else
 		self.badge:Hide()
@@ -275,10 +290,12 @@ function ButtonMixin:SetTimer(timer, tracker, badgeSpell)
 
 	local durationObject, start, length = tracker:Resolve(timer)
 
-	-- A secret slot cannot be tested, so let the engine hide the border once the totem is gone.
-	local have = timer.secret and timer.slot and GetTotemInfo(timer.slot)
-	if Compat.IsSecret(have) and self.placed.SetAlphaFromBoolean then
-		self.placed:SetAlphaFromBoolean(have, 1, 0)
+	if haveSecret then
+		if self.placed.SetAlphaFromBoolean then
+			self.placed:SetAlphaFromBoolean(have, 1, 0)
+		else
+			self.placed:SetAlpha(1)
+		end
 	else
 		self.placed:SetAlpha(1)
 		if not wasActive then
