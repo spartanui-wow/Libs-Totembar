@@ -17,6 +17,8 @@ local Tracker = Addon:NewModule('Tracker')
 
 local PAIR_WINDOW = 1 -- seconds between a cast and its slot update for them to belong together
 
+local GetEventInfo = (C_CombatLog and C_CombatLog.GetCurrentEventInfo) or CombatLogGetCurrentEventInfo
+
 ---@class LibsTotembar.Timer
 ---@field key number Spell key
 ---@field slot number|nil Totem slot, for totem timers
@@ -51,10 +53,11 @@ function Tracker:OnEnable()
 	self:RegisterMessage(Addon.MSG_SPELLS, 'ScanSlots')
 	-- The combat log tells us when a trap springs, where the client still lets addons read it.
 	-- Clients on the modern engine (Retail, WoW Forever) forbid registering it at all, so ask the
-	-- client rather than going by game flavor.
+	-- client rather than going by game flavor. Classic clients only keep the old reader global while
+	-- the deprecation fallbacks setting is on.
 	local combatLogClosed = C_CombatLog and C_CombatLog.IsCombatLogRestricted and C_CombatLog.IsCombatLogRestricted()
-	if Addon.IsClassic and self.Spells.classFile == 'HUNTER' and not combatLogClosed then
-		self:RegisterEvent('COMBAT_LOG_EVENT_UNFILTERED', 'OnCombatLog')
+	if Addon.IsClassic and self.Spells.classFile == 'HUNTER' and not combatLogClosed and GetEventInfo then
+		pcall(self.RegisterEvent, self, 'COMBAT_LOG_EVENT_UNFILTERED', 'OnCombatLog')
 	end
 	self.playerGUID = UnitGUID('player')
 	self:ScanSlots()
@@ -248,7 +251,7 @@ function Tracker:OnSpellCast(spellID)
 end
 
 function Tracker:OnCombatLog()
-	local _, subEvent, _, sourceGUID, _, _, _, _, _, _, _, _, spellName = CombatLogGetCurrentEventInfo()
+	local _, subEvent, _, sourceGUID, _, _, _, _, _, _, _, _, spellName = GetEventInfo()
 	if sourceGUID ~= self.playerGUID or not spellName then
 		return
 	end
