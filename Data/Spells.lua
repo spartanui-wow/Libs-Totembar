@@ -23,7 +23,6 @@ local ELEMENT = {
 	WATER = { 0.28, 0.62, 1.00 },
 	AIR = { 0.74, 0.64, 1.00 },
 }
-ns.ElementColors = ELEMENT
 
 ns.SpellData = {
 	RETAIL = {
